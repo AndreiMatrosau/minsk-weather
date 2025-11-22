@@ -1,5 +1,5 @@
 // CONSTANTS
-const API_KEY = 'YOUR_API_KEY_HERE'; // <--- REMEMBER TO PASTE YOUR KEY HERE
+const API_KEY = 'bd5e378503939ddaee76f12ad7a97608'; // <--- REMEMBER TO PASTE YOUR KEY HERE
 const CITY = 'Minsk';
 const UNITS = 'metric';
 
