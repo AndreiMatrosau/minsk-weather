@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minsk Real-Time Weather</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Default fallback background */
+            background-color: #1e3c72; 
+            background-image: url('https://images.unsplash.com/photo-1558444737-e6223c31e561?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            transition: background-image 1s ease-in-out;
+            position: relative;
+        }
+
+        /* Dark overlay to make text readable on any image */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: -1;
+        }
+
+        .weather-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        /* Glassmorphism Card */
+        .weather-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+        }
+
+        .header h1 { font-size: 2rem; font-weight: 600; }
+        .header p { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+
+        .main-weather { margin: 30px 0; }
+        .main-weather img { width: 100px; height: 100px; filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
+        .main-weather h2 { font-size: 4rem; font-weight: 300; }
+        .main-weather p { font-size: 1.2rem; text-transform: capitalize; margin-top: -10px; }
+
+        .details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+        }
+
+        .col { display: flex; flex-direction: column; }
+        .label { font-size: 0.8rem; opacity: 0.8; }
+        .value { font-size: 1.1rem; font-weight: 600; margin-top: 5px; }
+
+        .footer { margin-top: 20px; font-size: 0.8rem; opacity: 0.7; }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e3c72;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.75rem;
+        }
+
+        button:hover { background: #ffffff; transform: scale(1.05); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="weather-container">
+        <div class="weather-card">
+            <div class="header">
+                <h1 id="city">Minsk, BY</h1>
+                <p id="date">Loading...</p>
+            </div>
+
+            <div class="main-weather">
+                <img id="icon" src="" alt="Weather Icon" class="hidden">
+                <h2 id="temp">--</h2>
+                <p id="condition">Loading...</p>
+            </div>
+
+            <div class="details">
+                <div class="col">
+                    <span class="label">Humidity</span>
+                    <span class="value" id="humidity">--%</span>
+                </div>
+                <div class="col">
+                    <span class="label">Wind Speed</span>
+                    <span class="value" id="wind">-- m/s</span>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>Last updated: <span id="last-updated">--:--</span></p>
+                <button onclick="getWeather()">Refresh Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        // !!! PASTE YOUR OPENWEATHERMAP API KEY BELOW !!!
+        const API_KEY = 'bd5e378503939ddaee76f12ad7a97608'; 
+        
+        const CITY = 'Minsk';
+        const UNITS = 'metric'; 
+
+        // DOM Elements
+        const tempElement = document.getElementById('temp');
+        const conditionElement = document.getElementById('condition');
+        const humidityElement = document.getElementById('humidity');
+        const windElement = document.getElementById('wind');
+        const iconElement = document.getElementById('icon');
+        const dateElement = document.getElementById('date');
+        const lastUpdatedElement = document.getElementById('last-updated');
+
+        async function getWeather() {
+            // Simple check if user forgot the API key
+            if (API_KEY === 'bd5e378503939ddaee76f12ad7a97608') {
+                alert('Please open the file in a text editor and add your API Key where it says bd5e378503939ddaee76f12ad7a97608');
+                conditionElement.innerText = "Missing API Key";
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${API_KEY}&units=${UNITS}`
+                );
+                const data = await response.json();
+
+                if (data.cod !== 200) {
+                    alert('Error: ' + data.message);
+                    return;
+                }
+
+                // Extract Data
+                const temp = Math.round(data.main.temp);
+                const conditionMain = data.weather[0].main; 
+                const conditionDesc = data.weather[0].description;
+                const humidity = data.main.humidity;
+                const windSpeed = data.wind.speed;
+                const iconCode = data.weather[0].icon;
+
+                // Update UI
+                tempElement.innerText = `${temp}°C`;
+                conditionElement.innerText = conditionDesc;
+                humidityElement.innerText = `${humidity}%`;
+                windElement.innerText = `${windSpeed} m/s`;
+
+                // Set Icon
+                iconElement.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+                iconElement.classList.remove('hidden');
+
+                // Update Background
+                updateBackground(conditionMain);
+
+                // Update Timestamps
+                const now = new Date();
+                dateElement.innerText = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+                lastUpdatedElement.innerText = now.toLocaleTimeString();
+
+            } catch (error) {
+                console.error("Error fetching weather:", error);
+                conditionElement.innerText = "Connection Error";
+            }
+        }
+
+        function updateBackground(condition) {
+            let imageUrl = '';
+
+            switch (condition) {
+                case 'Clear':
+                    imageUrl = 'https://images.unsplash.com/photo-1601297183305-6df142704ea2?q=80&w=1920&auto=format&fit=crop'; 
+                    break;
+                case 'Clouds':
+                    imageUrl = 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1920&auto=format&fit=crop';
+                    break;
+                case 'Rain':
+                case 'Drizzle':
+                    imageUrl = 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1920&auto=format&fit=crop'; 
+                    break;
+                case 'Thunderstorm':
+                    imageUrl = 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?q=80&w=1920&auto=format&fit=crop';
+                    break;
+                case 'Snow':
+                    imageUrl = 'https://images.unsplash.com/photo-1477601263568-180e2c6d046e?q=80&w=1920&auto=format&fit=crop';
+                    break;
+                case 'Mist':
+                case 'Fog':
+                case 'Haze':
+                    imageUrl = 'https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?q=80&w=1920&auto=format&fit=crop';
+                    break;
+                default:
+                    // Generic City/Minsk Image
+                    imageUrl = 'https://images.unsplash.com/photo-1558444737-e6223c31e561?q=80&w=1920&auto=format&fit=crop'; 
+                    break;
+            }
+
+            document.body.style.backgroundImage = `url('${imageUrl}')`;
+        }
+
+        // Initial Load
+        getWeather();
+        
+        // Auto-refresh every 10 minutes
+        setInterval(getWeather, 600000);
+    </script>
+</body>
+</html>
